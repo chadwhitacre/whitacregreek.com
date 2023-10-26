@@ -45,7 +45,7 @@ async function handleFile(filepath) {
   });
   const www = filepath.replace('raw/', 'www/');
   await fs.mkdir(path.dirname(www), { recursive: true }, () => {})
-  await fs.writeFile(www, html, () => {});
+  await fs.writeFile(www, await prettier.format(html, {parser: 'html'}), () => {});
 }
 
 async function handleDir(dirpath) {

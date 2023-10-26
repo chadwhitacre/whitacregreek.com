@@ -23,6 +23,7 @@ function modifyOne(dom) {
 
   removeAll('script');
   removeAll('iframe');
+  removeAll('noscript');
   remove(document.getElementById('jp-post-flair')); // share buttons
   remove(document.getElementById('likes-other-gravatars')); // ???
   remove(document.getElementById('colophon'));

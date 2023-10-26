@@ -10,7 +10,7 @@ async function handleFile(filepath) {
   }
   const dom = JSDOM.fromFile(filepath).then(dom => {
     //console.log(dom.serialize());
-    console.log(dom.window.document.querySelector("p").textContent); // "Hello world"
+    dom.window.document.querySelector("script").textContent); // "Hello world"
   });
 }
 

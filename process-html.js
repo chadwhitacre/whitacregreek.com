@@ -8,12 +8,14 @@ async function handleFile(filepath) {
   if (!filepath.endsWith('.html')) {
     return;
   }
-  const dom = JSDOM.fromFile(filepath).then(dom => {
-    //console.log(dom.serialize());
-    dom.window.document.querySelector("script").textContent); // "Hello world"
+  var html;
+  const dom = await JSDOM.fromFile(filepath).then(dom => {
+    html = dom.serialize();
   });
+  const www = filepath.replace('raw/', 'www/');
+  await fs.mkdir(path.dirname(www), { recursive: true }, () => {})
+  await fs.writeFile(www, html, () => {});
 }
-
 
 async function handleDir(dirpath) {
   for(const name of await fs.promises.readdir(dirpath)) {
@@ -28,5 +30,5 @@ async function handleDir(dirpath) {
 }
 
 (async ()=>{
-  handleDir('src')
+  handleDir('raw')
 })();

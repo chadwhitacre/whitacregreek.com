@@ -8,22 +8,24 @@ function modifyOne(dom) {
   const document = dom.window.document;
 
   function remove(el) {
-    if (el) el.parentNode.removeChild(el);
+    if (!el) return false;
+    el.parentNode.removeChild(el);
+    return true;
   }
 
-  // Remove all scripts
-  var script;
-  while(1) {
-    script = document.querySelector("script");
-    if (script === null) break;
-    remove(script)
+  function removeAll(query) {
+    var el;
+    while(1) {
+      el = document.querySelector(query);
+      if (!remove(el)) break;
+    }
   };
 
-  // Remove share buttons
-  remove(document.getElementById('jp-post-flair'));
-
-  // Remove share buttons
-  remove(document.getElementById('jp-post-flair'));
+  removeAll('script');
+  removeAll('iframe');
+  remove(document.getElementById('jp-post-flair')); // share buttons
+  remove(document.getElementById('likes-other-gravatars')); // ???
+  remove(document.getElementById('colophon'));
 }
 
 async function handleFile(filepath) {

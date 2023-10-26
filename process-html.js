@@ -43,6 +43,8 @@ async function handleFile(filepath) {
     modifyOne(dom);
     html = dom.serialize();
   });
+  html = html.replace(/<!--[\s\S]*?-->/g, '');
+  html = html.replace(/\n\n/g, '');
   const www = filepath.replace('raw/', 'www/');
   await fs.mkdir(path.dirname(www), { recursive: true }, () => {})
   await fs.writeFile(www, await prettier.format(html, {parser: 'html'}), () => {});

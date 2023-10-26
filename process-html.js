@@ -8,7 +8,7 @@ function modifyOne(dom) {
   const document = dom.window.document;
 
   function remove(el) {
-    el.parentNode.removeChild(el);
+    if (el) el.parentNode.removeChild(el);
   }
 
   // Remove all scripts
@@ -18,6 +18,12 @@ function modifyOne(dom) {
     if (script === null) break;
     remove(script)
   };
+
+  // Remove share buttons
+  remove(document.getElementById('jp-post-flair'));
+
+  // Remove share buttons
+  remove(document.getElementById('jp-post-flair'));
 }
 
 async function handleFile(filepath) {
@@ -40,7 +46,7 @@ async function handleDir(dirpath) {
     const next = path.join(dirpath, name);
     const stat = await fs.promises.stat(next);
     if(stat.isFile()) {
-      return await handleFile(next);
+      await handleFile(next);
     } else if(stat.isDirectory()) {
       await handleDir(next);
     } else {

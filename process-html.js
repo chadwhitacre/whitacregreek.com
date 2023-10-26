@@ -30,6 +30,7 @@ function modifyOne(dom) {
 	remove('link[rel="canonical"]');
 	remove('link[rel="shortlink"]');
 	remove('link[rel="search"]');
+	remove('link[rel="dns-prefetch"]');
 	remove('meta[name="generator"]');
 }
 

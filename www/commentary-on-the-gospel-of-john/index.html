@@ -6,146 +6,7 @@
 <meta name="robots" content="max-image-preview:large">
 
 <!-- Async WordPress.com Remote Login -->
-<script id="wpcom_remote_login_js">
-var wpcom_remote_login_extra_auth = '';
-function wpcom_remote_login_remove_dom_node_id( element_id ) {
-	var dom_node = document.getElementById( element_id );
-	if ( dom_node ) { dom_node.parentNode.removeChild( dom_node ); }
-}
-function wpcom_remote_login_remove_dom_node_classes( class_name ) {
-	var dom_nodes = document.querySelectorAll( '.' + class_name );
-	for ( var i = 0; i < dom_nodes.length; i++ ) {
-		dom_nodes[ i ].parentNode.removeChild( dom_nodes[ i ] );
-	}
-}
-function wpcom_remote_login_final_cleanup() {
-	wpcom_remote_login_remove_dom_node_classes( "wpcom_remote_login_msg" );
-	wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_key" );
-	wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_validate" );
-	wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_js" );
-	wpcom_remote_login_remove_dom_node_id( "wpcom_request_access_iframe" );
-	wpcom_remote_login_remove_dom_node_id( "wpcom_request_access_styles" );
-}
 
-// Watch for messages back from the remote login
-window.addEventListener( "message", function( e ) {
-	if ( e.origin === "https://r-login.wordpress.com" ) {
-		var data = {};
-		try {
-			data = JSON.parse( e.data );
-		} catch( e ) {
-			wpcom_remote_login_final_cleanup();
-			return;
-		}
-
-		if ( data.msg === 'LOGIN' ) {
-			// Clean up the login check iframe
-			wpcom_remote_login_remove_dom_node_id( "wpcom_remote_login_key" );
-
-			var id_regex = new RegExp( /^[0-9]+$/ );
-			var token_regex = new RegExp( /^.*|.*|.*$/ );
-			if (
-				token_regex.test( data.token )
-				&& id_regex.test( data.wpcomid )
-			) {
-				// We have everything we need to ask for a login
-				var script = document.createElement( "script" );
-				script.setAttribute( "id", "wpcom_remote_login_validate" );
-				script.src = '/remote-login.php?wpcom_remote_login=validate'
-					+ '&wpcomid=' + data.wpcomid
-					+ '&token=' + encodeURIComponent( data.token )
-					+ '&host=' + window.location.protocol
-					+ '//' + window.location.hostname
-					+ '&postid=128'
-					+ '&is_singular=';
-				document.body.appendChild( script );
-			}
-
-			return;
-		}
-
-		// Safari ITP, not logged in, so redirect
-		if ( data.msg === 'LOGIN-REDIRECT' ) {
-			window.location = 'https://wordpress.com/log-in?redirect_to=' + window.location.href;
-			return;
-		}
-
-		// Safari ITP, storage access failed, remove the request
-		if ( data.msg === 'LOGIN-REMOVE' ) {
-			var css_zap = 'html { -webkit-transition: margin-top 1s; transition: margin-top 1s; } /* 9001 */ html { margin-top: 0 !important; } * html body { margin-top: 0 !important; } @media screen and ( max-width: 782px ) { html { margin-top: 0 !important; } * html body { margin-top: 0 !important; } }';
-			var style_zap = document.createElement( 'style' );
-			style_zap.type = 'text/css';
-			style_zap.appendChild( document.createTextNode( css_zap ) );
-			document.body.appendChild( style_zap );
-
-			var e = document.getElementById( 'wpcom_request_access_iframe' );
-			e.parentNode.removeChild( e );
-
-			document.cookie = 'wordpress_com_login_access=denied; path=/; max-age=31536000';
-
-			return;
-		}
-
-		// Safari ITP
-		if ( data.msg === 'REQUEST_ACCESS' ) {
-			console.log( 'request access: safari' );
-
-			// Check ITP iframe enable/disable knob
-			if ( wpcom_remote_login_extra_auth !== 'safari_itp_iframe' ) {
-				return;
-			}
-
-			// If we are in a "private window" there is no ITP.
-			var private_window = false;
-			try {
-				var opendb = window.openDatabase( null, null, null, null );
-			} catch( e ) {
-				private_window = true;
-			}
-
-			if ( private_window ) {
-				console.log( 'private window' );
-				return;
-			}
-
-			var iframe = document.createElement( 'iframe' );
-			iframe.id = 'wpcom_request_access_iframe';
-			iframe.setAttribute( 'scrolling', 'no' );
-			iframe.setAttribute( 'sandbox', 'allow-storage-access-by-user-activation allow-scripts allow-same-origin allow-top-navigation-by-user-activation' );
-			iframe.src = 'https://r-login.wordpress.com/remote-login.php?wpcom_remote_login=request_access&origin=' + encodeURIComponent( data.origin ) + '&wpcomid=' + encodeURIComponent( data.wpcomid );
-
-			var css = 'html { -webkit-transition: margin-top 1s; transition: margin-top 1s; } /* 9001 */ html { margin-top: 46px !important; } * html body { margin-top: 46px !important; } @media screen and ( max-width: 660px ) { html { margin-top: 71px !important; } * html body { margin-top: 71px !important; } #wpcom_request_access_iframe { display: block; height: 71px !important; } } #wpcom_request_access_iframe { border: 0px; height: 46px; position: fixed; top: 0; left: 0; width: 100%; min-width: 100%; z-index: 99999; background: #23282d; } ';
-
-			var style = document.createElement( 'style' );
-			style.type = 'text/css';
-			style.id = 'wpcom_request_access_styles';
-			style.appendChild( document.createTextNode( css ) );
-			document.body.appendChild( style );
-
-			document.body.appendChild( iframe );
-		}
-
-		if ( data.msg === 'DONE' ) {
-			wpcom_remote_login_final_cleanup();
-		}
-	}
-}, false );
-
-// Inject the remote login iframe after the page has had a chance to load
-// more critical resources
-window.addEventListener( "DOMContentLoaded", function( e ) {
-	var iframe = document.createElement( "iframe" );
-	iframe.style.display = "none";
-	iframe.setAttribute( "scrolling", "no" );
-	iframe.setAttribute( "id", "wpcom_remote_login_key" );
-	iframe.src = "https://r-login.wordpress.com/remote-login.php"
-		+ "?wpcom_remote_login=key"
-		+ "&origin=aHR0cHM6Ly93aGl0YWNyZWdyZWVrLmNvbQ%3D%3D"
-		+ "&wpcomid=187748756"
-		+ "&time=1696986559";
-	document.body.appendChild( iframe );
-}, false );
-</script>
 <link rel="dns-prefetch" href="https://s2.wp.com/">
 <link rel="dns-prefetch" href="https://s1.wp.com/">
 <link rel="dns-prefetch" href="https://s0.wp.com/">
@@ -154,26 +15,8 @@ window.addEventListener( "DOMContentLoaded", function( e ) {
 <link href="https://fonts.gstatic.com" crossorigin="" rel="preconnect">
 <link rel="alternate" type="application/rss+xml" title="Reading and Studying Koine Greek » Feed" href="../feed/index.html">
 <link rel="alternate" type="application/rss+xml" title="Reading and Studying Koine Greek » Comments Feed" href="../comments/feed/index.html">
-	<script type="text/javascript">
-		/* <![CDATA[ */
-		function addLoadEvent(func) {
-			var oldonload = window.onload;
-			if (typeof window.onload != 'function') {
-				window.onload = func;
-			} else {
-				window.onload = function () {
-					oldonload();
-					func();
-				}
-			}
-		}
-		/* ]]> */
-	</script>
-	<script type="text/javascript">
-window._wpemojiSettings = {"baseUrl":"https:\/\/s0.wp.com\/wp-content\/mu-plugins\/wpcom-smileys\/twemoji\/2\/72x72\/","ext":".png","svgUrl":"https:\/\/s0.wp.com\/wp-content\/mu-plugins\/wpcom-smileys\/twemoji\/2\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/s2.wp.com\/wp-includes\/js\/wp-emoji-release.min.js?m=1677072837i&ver=6.3.2-alpha-56786"}};
-/*! This file is auto-generated */
-!function(i,n){var o,s,e;function c(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function p(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data),r=(e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0),new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data));return t.every(function(e,t){return e===r[t]})}function u(e,t,n){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\uddfa\ud83c\uddf3","\ud83c\uddfa\u200b\ud83c\uddf3")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!n(e,"\ud83e\udef1\ud83c\udffb\u200d\ud83e\udef2\ud83c\udfff","\ud83e\udef1\ud83c\udffb\u200b\ud83e\udef2\ud83c\udfff")}return!1}function f(e,t,n){var r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):i.createElement("canvas"),a=r.getContext("2d",{willReadFrequently:!0}),o=(a.textBaseline="top",a.font="600 32px Arial",{});return e.forEach(function(e){o[e]=t(a,e,n)}),o}function t(e){var t=i.createElement("script");t.src=e,t.defer=!0,i.head.appendChild(t)}"undefined"!=typeof Promise&&(o="wpEmojiSettingsSupports",s=["flag","emoji"],n.supports={everything:!0,everythingExceptFlag:!0},e=new Promise(function(e){i.addEventListener("DOMContentLoaded",e,{once:!0})}),new Promise(function(t){var n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"}),a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=function(e){c(n=e.data),a.terminate(),t(n)})}catch(e){}c(n=f(s,u,p))}t(n)}).then(function(e){for(var t in e)n.supports[t]=e[t],n.supports.everything=n.supports.everything&&n.supports[t],"flag"!==t&&(n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&n.supports[t]);n.supports.everythingExceptFlag=n.supports.everythingExceptFlag&&!n.supports.flag,n.DOMReady=!1,n.readyCallback=function(){n.DOMReady=!0}}).then(function(){return e}).then(function(){var e;n.supports.everything||(n.readyCallback(),(e=n.source||{}).concatemoji?t(e.concatemoji):e.wpemoji&&e.twemoji&&(t(e.twemoji),t(e.wpemoji)))}))}((window,document),window._wpemojiSettings);
-</script>
+	
+	
 <style type="text/css">
 img.wp-smiley,
 img.emoji {
@@ -216,18 +59,10 @@ body{--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: 
 :root { --font-headings: unset; --font-base: unset; --font-headings-default: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; --font-base-default: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;}
 </style>
 <link crossorigin="anonymous" rel="stylesheet" id="all-css-10-1" href="https://s1.wp.com/_static/??-eJyNjcEKAjEMRH/IGnZxFz2InyI1DW3XNCmmRfx7XfEiXrwM82B4A/fqUKWRNCjdVe4xi8FCrXq8fhiK6hqhMxlY8jcKPoTHu2aJWzTbwP+mcxYEU8yeHWtU+4IfW0tUXr9pB5H14nkdnMpxmA/zNA7TuF+eUVRJKw==&amp;cssminify=yes" type="text/css" media="all">
-<script id="media-video-jwt-bridge-js-extra">
-var videopressAjax = {"ajaxUrl":"https:\/\/whitacregreek.wordpress.com\/wp-admin\/admin-ajax.php","bridgeUrl":"\/wp-content\/mu-plugins\/jetpack-plugin\/moon\/jetpack_vendor\/automattic\/jetpack-videopress\/build\/lib\/token-bridge.js","post_id":"128"};
-</script>
-<script id="wpcom-actionbar-placeholder-js-extra">
-var actionbardata = {"siteID":"187748756","siteURL":"https:\/\/whitacregreek.com","xhrURL":"https:\/\/whitacregreek.com\/wp-admin\/admin-ajax.php","nonce":"bd0b28bb9c","isLoggedIn":"","statusMessage":"","subsEmailDefault":"instantly","proxyScriptUrl":"https:\/\/s0.wp.com\/wp-content\/js\/wpcom-proxy-request.js?ver=20211021","shortlink":"https:\/\/wp.me\/PcHM1K-24","i18n":{"followedText":"New posts from this site will now appear in your <a href="https://whitacregreek.com/commentary-on-the-gospel-of-john/\&quot;https:\/\/wordpress.com\/read\&quot;">Reader<\/a>","foldBar":"Collapse this bar","unfoldBar":"Expand this bar"}};
-</script>
-<script crossorigin="anonymous" type="text/javascript" src="https://s2.wp.com/_static/??-eJx9jksOwjAMRC9EsIpQKxaIo6B8TOU2iSPHKfT2dAFIsGA5b540A/diPGfFrDBVSOwoomkVxY4bM5RvvJ/qDr49iWqK8GP97VIzJbaRcoUFxbUEYc02kTeRbUD540+oxfr5lbcrnN/sumAOLGCbcrKq5D/2QgG5CNYKrlEMEMmB8ozZOKEw4rZ4SeeuP3XHwzD0p+kJ1GNauQ=="></script>
-<script id="rlt-proxy-js-after" type="text/javascript">
-	window.addEventListener( 'DOMContentLoaded', function() {
-		rltInitialize( {"token":null,"iframeOrigins":["https:\/\/widgets.wp.com"]} );
-	} );
-</script>
+
+
+
+
 <link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://whitacregreek.wordpress.com/xmlrpc.php?rsd">
 <meta name="generator" content="WordPress.com">
 <link rel="canonical" href="index.html">
@@ -403,50 +238,11 @@ var actionbardata = {"siteID":"187748756","siteURL":"https:\/\/whitacregreek.com
 </div><!-- #page -->
 
 <!--  -->
-<script src="https://0.gravatar.com/js/hovercards/hovercards.min.js?ver=202341aeb24331352c11f5446dd670d75325a3c4e3b8a6bd7f92ee1c88f8b8636d4d9c" id="grofiles-cards-js"></script>
-<script id="wpgroho-js-extra">
-var WPGroHo = {"my_hash":""};
-</script>
-<script crossorigin="anonymous" type="text/javascript" src="https://s2.wp.com/wp-content/mu-plugins/gravatar-hovercards/wpgroho.js?m=1610363240i"></script>
 
-	<script>
-		// Initialize and attach hovercards to all gravatars
-		( function() {
-			function init() {
-				if ( typeof Gravatar === 'undefined' ) {
-					return;
-				}
 
-				if ( typeof Gravatar.init !== 'function' ) {
-					return;
-				}
 
-				Gravatar.profile_cb = function ( hash, id ) {
-					WPGroHo.syncProfileData( hash, id );
-				};
 
-				Gravatar.my_hash = WPGroHo.my_hash;
-				Gravatar.init(
-					'body',
-					'#wp-admin-bar-my-account',
-					{
-						i18n: {
-							'Edit your profile': 'Edit your profile',
-							'View profile': 'View profile',
-							'Sorry, we are unable to load this Gravatar profile.': 'Sorry, we are unable to load this Gravatar profile.',
-							'Sorry, we are unable to load this Gravatar profile. Please check your internet connection.': 'Sorry, we are unable to load this Gravatar profile. Please check your internet connection.',
-						},
-					}
-				);
-			}
-
-			if ( document.readyState !== 'loading' ) {
-				init();
-			} else {
-				document.addEventListener( 'DOMContentLoaded', init );
-			}
-		} )();
-	</script>
+	
 
 		<div style="display:none">
 	</div>
@@ -483,20 +279,7 @@ var WPGroHo = {"my_hash":""};
 		</ul>
 	</div>
 	
-<script>
-window.addEventListener( "load", function( event ) {
-	var link = document.createElement( "link" );
-	link.href = "https://s0.wp.com/wp-content/mu-plugins/actionbar/actionbar.css?v=20210915";
-	link.type = "text/css";
-	link.rel = "stylesheet";
-	document.head.appendChild( link );
 
-	var script = document.createElement( "script" );
-	script.src = "https://s0.wp.com/wp-content/mu-plugins/actionbar/actionbar.js?v=20220329";
-	script.defer = true;
-	document.body.appendChild( script );
-} );
-</script>
 
 			<div id="jp-carousel-loading-overlay">
 			<div id="jp-carousel-loading-wrapper">
@@ -645,239 +428,27 @@ window.addEventListener( "load", function( event ) {
 
 		</div>
 		
-	<script type="text/javascript">
-		window.WPCOM_sharing_counts = {"https:\/\/whitacregreek.com\/commentary-on-the-gospel-of-john\/":128};
-	</script>
+	
 				<link crossorigin="anonymous" rel="stylesheet" id="all-css-0-2" href="https://s0.wp.com/_static/??-eJyljEsKgDAMBS9kDUUquhDPom0Qaz/BNHh9KdgTuBl4w2PgIWVzKpgKRFEU5DgTg8dCm72+DTHnCicBGex2Z2EMwM9JeKtdkgvYW+YOftTaqYkaXOOix8noQU+z8S9MR0BZ&amp;cssminify=yes" type="text/css" media="all">
-<script id="comment-like-js-extra">
-var comment_like_text = {"loading":"Loading...","swipeUrl":"https:\/\/s2.wp.com\/wp-content\/mu-plugins\/comment-likes\/js\/lib\/swipe.js?ver=20131008"};
-</script>
-<script id="coblocks-loader-js-extra">
-var wpcom_coblocks_js = {"coblocks_masonry_js":"https:\/\/s2.wp.com\/wp-content\/plugins\/coblocks\/2.18.1-simple-rev.4\/dist\/js\/coblocks-masonry.min.js","coblocks_lightbox_js":"https:\/\/s2.wp.com\/wp-content\/plugins\/coblocks\/2.18.1-simple-rev.4\/dist\/js\/coblocks-lightbox.min.js","jquery_core_js":"\/wp-includes\/js\/jquery\/jquery.min.js","jquery_migrate_js":"\/wp-includes\/js\/jquery\/jquery-migrate.min.js","masonry_js":"\/wp-includes\/js\/masonry.min.js","imagesloaded_js":"\/wp-includes\/js\/imagesloaded.min.js"};
-var coblocksLigthboxData = {"closeLabel":"Close Gallery","leftLabel":"Previous","rightLabel":"Next"};
-</script>
-<script id="jetpack-carousel-js-extra">
-var jetpackSwiperLibraryPath = {"url":"https:\/\/s2.wp.com\/wp-content\/mu-plugins\/jetpack-plugin\/moon\/_inc\/build\/carousel\/swiper-bundle.min.js"};
-var jetpackCarouselStrings = {"widths":[370,700,1000,1200,1400,2000],"is_logged_in":"","lang":"en","ajaxurl":"https:\/\/whitacregreek.com\/wp-admin\/admin-ajax.php","nonce":"7faf2d8ce6","display_exif":"1","display_comments":"1","single_image_gallery":"1","single_image_gallery_media_file":"","background_color":"black","comment":"Comment","post_comment":"Post Comment","write_comment":"Write a Comment...","loading_comments":"Loading Comments...","download_original":"View full size <span class=\"photo-size\">{0}<span class=\"photo-size-times\">\u00d7<\/span>{1}<\/span>","no_comment_text":"Please be sure to submit some text with your comment.","no_comment_email":"Please provide an email address to comment.","no_comment_author":"Please provide your name to comment.","comment_post_error":"Sorry, but there was an error posting your comment. Please try again later.","comment_approved":"Your comment was approved.","comment_unapproved":"Your comment is in moderation.","camera":"Camera","aperture":"Aperture","shutter_speed":"Shutter Speed","focal_length":"Focal Length","copyright":"Copyright","comment_registration":"0","require_name_email":"1","login_url":"https:\/\/whitacregreek.wordpress.com\/wp-login.php?redirect_to=https%3A%2F%2Fwhitacregreek.com%2Fcommentary-on-the-gospel-of-john%2F","blog_id":"187748756","meta_data":["camera","aperture","shutter_speed","focal_length","copyright"],"stats_query_args":"blog=187748756&v=wpcom&tz=-4&user_id=0&subd=whitacregreek","is_public":"1"};
-</script>
-<script id="sharing-js-js-extra">
-var sharing_js_options = {"lang":"en","counts":"1","is_stats_active":"1"};
-</script>
-<script id="verbum-settings-js-before" type="text/javascript">
-window.VerbumComments = {"Log in or provide your name and email to leave a reply.":"Log in or provide your name and email to leave a reply.","Receive web and mobile notifications for posts on this site.":"Receive web and mobile notifications for posts on this site.","Name":"Name","Email (address never made public)":"Email (address never made public)","Website (optional)":"Website (optional)","Leave a reply. (log in optional)":"Leave a reply. (log in optional)","Log in to leave a reply.":"Log in to leave a reply.","Logged in via %s":"Logged in via %s","Log out":"Log out","Email":"Email","(Address never made public)":"(Address never made public)","Instantly":"Instantly","Daily":"Daily","Reply":"Reply","WordPress":"WordPress","Weekly":"Weekly","Notify me of new posts":"Notify me of new posts","Email me new posts":"Email me new posts","Email me new comments":"Email me new comments","Cancel":"Cancel","Write a comment\u2026":"Write a Comment...","Website":"Website","Optional":"Optional","siteId":187748756,"mustLogIn":false,"requireNameEmail":true,"commentRegistration":false,"connectURL":"https:\/\/whitacregreek.wordpress.com\/public.api\/connect\/?action=request&domain=whitacregreek.com","logoutURL":"https:\/\/whitacregreek.wordpress.com\/wp-login.php?action=logout&_wpnonce=ceea6084ec","homeURL":"https:\/\/whitacregreek.com\/","subscribeToBlog":true,"subscribeToComment":true,"isJetpackCommentsLoggedIn":false,"jetpackUsername":"","jetpackUserId":0,"jetpackSignature":"","jetpackAvatar":"https:\/\/0.gravatar.com\/avatar\/?s=96&amp;d=identicon&amp;r=G"}
-</script>
-<script crossorigin="anonymous" type="text/javascript" src="https://s0.wp.com/_static/??-eJydkN1uwjAMhV+I1CpiiJtpjzK5idW6TZyQnyLefoF2Gypc4Sv76Bz7k+ESlPaSSTK4ooItPUsCyxMlOBcqNKAYS7EZ0w5em7V3rkpqCY0bYRv8T3XW6ynBvmlPTasSu2BJRZqbAxhOedm0mJT1aCqEY9nuywO5ejaUDmaMjLdYiOwwXpXgzD1m9k+pB/yRckA9rTM47wW+WTR0ha0BjdGXRPbP9yu8gnn8ympTl1D/sRnfx0kDRjJozPXesvQrx5f7bI+nj8NxX2v8AWzLr8M="></script>
-<script id="sharing-js-js-after" type="text/javascript">
-var windowOpen;
-			( function () {
-				function matches( el, sel ) {
-					return !! (
-						el.matches && el.matches( sel ) ||
-						el.msMatchesSelector && el.msMatchesSelector( sel )
-					);
-				}
 
-				document.body.addEventListener( 'click', function ( event ) {
-					if ( ! event.target ) {
-						return;
-					}
 
-					var el;
-					if ( matches( event.target, 'a.share-twitter' ) ) {
-						el = event.target;
-					} else if ( event.target.parentNode && matches( event.target.parentNode, 'a.share-twitter' ) ) {
-						el = event.target.parentNode;
-					}
 
-					if ( el ) {
-						event.preventDefault();
 
-						// If there's another sharing window open, close it.
-						if ( typeof windowOpen !== 'undefined' ) {
-							windowOpen.close();
-						}
-						windowOpen = window.open( el.getAttribute( 'href' ), 'wpcomtwitter', 'menubar=1,resizable=1,width=600,height=350' );
-						return false;
-					}
-				} );
-			} )();
-var windowOpen;
-			( function () {
-				function matches( el, sel ) {
-					return !! (
-						el.matches && el.matches( sel ) ||
-						el.msMatchesSelector && el.msMatchesSelector( sel )
-					);
-				}
 
-				document.body.addEventListener( 'click', function ( event ) {
-					if ( ! event.target ) {
-						return;
-					}
 
-					var el;
-					if ( matches( event.target, 'a.share-facebook' ) ) {
-						el = event.target;
-					} else if ( event.target.parentNode && matches( event.target.parentNode, 'a.share-facebook' ) ) {
-						el = event.target.parentNode;
-					}
 
-					if ( el ) {
-						event.preventDefault();
-
-						// If there's another sharing window open, close it.
-						if ( typeof windowOpen !== 'undefined' ) {
-							windowOpen.close();
-						}
-						windowOpen = window.open( el.getAttribute( 'href' ), 'wpcomfacebook', 'menubar=1,resizable=1,width=600,height=400' );
-						return false;
-					}
-				} );
-			} )();
-</script>
-	<script>
-	/(trident|msie)/i.test(navigator.userAgent)&&document.getElementById&&window.addEventListener&&window.addEventListener("hashchange",function(){var t,e=location.hash.substring(1);/^[A-z0-9_-]+$/.test(e)&&(t=document.getElementById(e))&&(/^(?:a|select|input|button|textarea)$/i.test(t.tagName)||(t.tabIndex=-1),t.focus())},!1);
-	</script>
-	<script type="text/javascript">
-// <![CDATA[
-(function() {
-try{
-  if ( window.external &&'msIsSiteMode' in window.external) {
-    if (window.external.msIsSiteMode()) {
-      var jl = document.createElement('script');
-      jl.type='text/javascript';
-      jl.async=true;
-      jl.src='/wp-content/plugins/ie-sitemode/custom-jumplist.php';
-      var s = document.getElementsByTagName('script')[0];
-      s.parentNode.insertBefore(jl, s);
-    }
-  }
-}catch(e){}
-})();
-// ]]>
-</script>	<iframe src="https://widgets.wp.com/likes/master.html?ver=20230906#ver=20230906&amp;origin=https://whitacregreek.com" scrolling="no" id="likes-master" name="likes-master" style="display:none;"></iframe>
+	
+		<iframe src="https://widgets.wp.com/likes/master.html?ver=20230906#ver=20230906&amp;origin=https://whitacregreek.com" scrolling="no" id="likes-master" name="likes-master" style="display:none;"></iframe>
 	<div id="likes-other-gravatars">
 		<div class="likes-text">
 			<span>%d</span> bloggers like this:		</div>
 		<ul class="wpl-avatars sd-like-gravatars"></ul>
 	</div>
 
-		<script src="https://stats.wp.com/w.js?63" defer=""></script> <script type="text/javascript">
-_tkq = window._tkq || [];
-_stq = window._stq || [];
-_tkq.push(['storeContext', {'blog_id':'187748756','blog_tz':'-4','user_lang':'en','blog_lang':'en','user_id':'0'}]);
-_stq.push(['view', {'blog':'187748756','v':'wpcom','tz':'-4','user_id':'0','post':'128','subd':'whitacregreek'}]);
-_stq.push(['extra', {'crypt':'UE40eW5QN0p8M2Y/RE1mNzc2NTVTamdsd0xoLz9RQkM2K298TXY9bERQMXc2MjhEaVZfb2wwakRoSj0mUkp1THptM1NdbkV1WjZIcU9mVWQmPUIvMlN6Jk8wW3NYVEJ3dWZOWExuWD9HQ1sudkE3eGJHeXdxa2ZteUNmUFtbJlRSNUh8LUQlb2VBWF02UkphZFVObW5hL3BmS2xGdU9RRlFidFd6UzZfQ05qTF1wR0FpbmVBfjNiYVgyeVZvLmxxTlprVzZ8cFEsenF4eTNCUjJnXUhQNi0wbThoLkQ4a1dYYWZmbHlnRjFxVEh0LVE2fFZVc0wzJmdqelBTNzh+MkJ4Rk95ckxrV3dbLQ=='}]);
-_stq.push([ 'clickTrackerInit', '187748756', '128' ]);
-	</script>
+		 
 <noscript><img src="https://pixel.wp.com/b.gif?v=noscript" style="height:1px;width:1px;overflow:hidden;position:absolute;bottom:1px;" alt=""></noscript>
-<script>
-if ( 'object' === typeof wpcom_mobile_user_agent_info ) {
 
-	wpcom_mobile_user_agent_info.init();
-	var mobileStatsQueryString = "";
-	
-	if( false !== wpcom_mobile_user_agent_info.matchedPlatformName )
-		mobileStatsQueryString += "&x_" + 'mobile_platforms' + '=' + wpcom_mobile_user_agent_info.matchedPlatformName;
-	
-	if( false !== wpcom_mobile_user_agent_info.matchedUserAgentName )
-		mobileStatsQueryString += "&x_" + 'mobile_devices' + '=' + wpcom_mobile_user_agent_info.matchedUserAgentName;
-	
-	if( wpcom_mobile_user_agent_info.isIPad() )
-		mobileStatsQueryString += "&x_" + 'ipad_views' + '=' + 'views';
 
-	if( "" != mobileStatsQueryString ) {
-		new Image().src = document.location.protocol + '//pixel.wp.com/g.gif?v=wpcom-no-pv' + mobileStatsQueryString + '&baba=' + Math.random();
-	}
-	
-}
-</script>
-<script>
-(function() {
-	'use strict';
-
-	const fetches = {};
-	const promises = {};
-	const urls = {
-		'verbum': 'https://s2.wp.com/wp-content/mu-plugins/verbum/dist/index.js?m=1696968382i&ver=1696968382'
-	};
-	const loaders = {
-		'verbum': () => {
-			fetchExternalScript('verbum');
-			promises['verbum'] = promises['verbum'] || loadWPScript('verbum');
-			return promises['verbum'];
-		},
-		
-	};
-	const scriptExtras = {
-		
-	};
-
-	window.WP_Enqueue_Dynamic_Script = {
-		loadScript: (handle) => {
-			if (!loaders[handle]) {
-				console.error('WP_Enqueue_Dynamic_Script: unregistered script `' + handle + '`.');
-			}
-			return loaders[handle]();
-		}
-	};
-
-	function fetchExternalScript(handle) {
-		if (!urls[handle]) {
-			return Promise.resolve();
-		}
-
-		fetches[handle] = fetches[handle] || fetch(urls[handle], { mode: 'no-cors' });
-		return fetches[handle];
-	}
-
-	function runExtraScript(handle, type, index) {
-		const id = 'wp-enqueue-dynamic-script:' + handle + ':' + type + ':' + (index + 1);
-		const template = document.getElementById(id);
-		if (!template) {
-			return Promise.reject();
-		}
-
-		const script = document.createElement( 'script' );
-		script.innerHTML = template.innerHTML;
-		document.body.appendChild( script );
-		return Promise.resolve();
-	}
-
-	function loadExternalScript(handle) {
-		if (!urls[handle]) {
-			return Promise.resolve();
-		}
-
-		return fetches[handle].then(() => {
-			return new Promise((resolve, reject) => {
-				const script = document.createElement('script');
-				script.onload = () => resolve();
-				script.onerror = (e) => reject(e);
-				script.src = urls[handle];
-				document.body.appendChild(script);
-			});
-		});
-	}
-
-	function loadExtra(handle, pos) {
-		const count = (scriptExtras[handle] && scriptExtras[handle][pos]) || 0;
-		let promise = Promise.resolve();
-
-		for (let i = 0; i < count; i++) {
-			promise = promise.then(() => runExtraScript(handle, pos, i));
-		}
-
-		return promise;
-	}
-
-	function loadWPScript(handle) {
-		return loadExtra(handle, 'before')
-			.then(() => loadExternalScript(handle))
-			.then(() => loadExtra(handle, 'after'));
-	}
-} )();
-</script>
 
 
 

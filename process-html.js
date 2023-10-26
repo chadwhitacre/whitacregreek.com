@@ -2,6 +2,8 @@
 const fs = require( 'fs' );
 const path = require( 'path' );
 const jsdom = require("jsdom");
+const prettier = require("prettier");
+
 const { JSDOM } = jsdom;
 
 function modifyOne(dom) {
@@ -24,6 +26,11 @@ function modifyOne(dom) {
   remove('#colophon'); // footer
   remove('#actionbar'); // ???
 	remove('link[rel="alternate"]'); // RSS feeds
+	remove('link[rel="EditURI"]');
+	remove('link[rel="canonical"]');
+	remove('link[rel="shortlink"]');
+	remove('link[rel="search"]');
+	remove('meta[name="generator"]');
 }
 
 async function handleFile(filepath) {

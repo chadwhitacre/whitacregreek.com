@@ -22,6 +22,7 @@ function modifyOne(dom) {
   remove('#jp-post-flair'); // share buttons
   remove('#likes-other-gravatars'); // ???
   remove('#colophon'); // footer
+  remove('#actionbar'); // ???
 }
 
 async function handleFile(filepath) {

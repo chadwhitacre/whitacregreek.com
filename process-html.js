@@ -7,26 +7,21 @@ const { JSDOM } = jsdom;
 function modifyOne(dom) {
   const document = dom.window.document;
 
-  function remove(el) {
-    if (!el) return false;
-    el.parentNode.removeChild(el);
-    return true;
-  }
-
-  function removeAll(query) {
+  function remove(query) {
     var el;
     while(1) {
       el = document.querySelector(query);
-      if (!remove(el)) break;
+      if (!el) break;
+			el.parentNode.removeChild(el);
     }
   };
 
-  removeAll('script');
-  removeAll('iframe');
-  removeAll('noscript');
-  remove(document.getElementById('jp-post-flair')); // share buttons
-  remove(document.getElementById('likes-other-gravatars')); // ???
-  remove(document.getElementById('colophon'));
+  remove('script');
+  remove('iframe');
+  remove('noscript');
+  remove('#jp-post-flair'); // share buttons
+  remove('#likes-other-gravatars'); // ???
+  remove('#colophon'); // footer
 }
 
 async function handleFile(filepath) {

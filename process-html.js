@@ -23,6 +23,7 @@ function modifyOne(dom) {
   remove('#likes-other-gravatars'); // ???
   remove('#colophon'); // footer
   remove('#actionbar'); // ???
+	remove('link[rel="alternate"]'); // RSS feeds
 }
 
 async function handleFile(filepath) {

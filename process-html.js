@@ -32,6 +32,12 @@ function modifyDom(dom) {
   remove('link[rel="search"]');
   remove('link[rel="dns-prefetch"]');
   remove('meta[name="generator"]');
+  remove('meta[property="article:publisher"]');
+  remove('meta[name="msapplication-task"]');
+  remove('meta[name="msapplication-window"]');
+  remove('meta[name="msapplication-tooltip"]');
+
+  document.getElementById('global-styles-inline-css').innerHTML = '@import url("/assets/global.css")';
 
   return dom;
 }

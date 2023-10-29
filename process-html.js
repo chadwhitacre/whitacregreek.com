@@ -21,13 +21,13 @@ async function download(url, destdir) {
     var idx = emanelif.indexOf('.');
     var ext = reverse(emanelif.slice(0, idx));
     var fn = reverse(emanelif.slice(idx+1));
-    part = querystring.replace('=', '-');
+    fn = fn.replaceAll('_', '-').replaceAll('.', '-');
+    part = querystring.replaceAll('=', '-').replaceAll('&', '-');
     filename = `${fn}-${part}.${ext}`
   }
 
   filepath = path.join(destdir, filename);
   var file = fs.createWriteStream(filepath);
-  console.log(url);
   await https.get(url, function(response) {
     response.pipe(file);
     file.on('finish', function() {
@@ -55,9 +55,14 @@ async function modifyImages(images, destdir) {
       img.src = await download(url, destdir);
     }
 
-    // same for srcset
-    //console.log(img.srcset);
-
+    // same for img.srcset
+    var url, size, urlSizes = img.srcset.split(', ');
+    for (var j=0, urlSize; urlSize=urlSizes[j]; j++) {
+      [url, size] = urlSize.split(' ');
+      url = await download(url, destdir);
+      urlSizes[j] = `${url} ${size}`;
+    }
+    img.srcset = urlSizes.join(', ');
   }
 }
 

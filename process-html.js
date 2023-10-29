@@ -104,6 +104,7 @@ async function modifyDom(dom, destdir) {
   remove('link[rel="shortlink"]');
   remove('link[rel="search"]');
   remove('link[rel="dns-prefetch"]');
+  remove('link[href="https://fonts.gstatic.com"]');
   remove('meta[name="generator"]');
   remove('meta[property="article:publisher"]');
   remove('meta[name="msapplication-task"]');
@@ -142,8 +143,8 @@ function modifyHtml(html) {
     'href="/assets/7.css"');
   html = html.replace('href="https://s0.wp.com/_static/??-eJyljEsKgDAMBS9kDUUquhDPom0Qaz/BNHh9KdgTuBl4w2PgIWVzKpgKRFEU5DgTg8dCm72+DTHnCicBGex2Z2EMwM9JeKtdkgvYW+YOftTaqYkaXOOix8noQU+z8S9MR0BZ&amp;cssminify=yes"',
     'href="/assets/8.css"');
-  html = html.replace('https://fonts-api.wp.com/css?family=PT+Sans%3A400%2C400i%2C700%2C700i&subset=latin%2Clatin-ext&display=swap',
-    'href="/assets/9.css"');
+  html = html.replace('href="https://fonts-api.wp.com/css?family=PT+Sans%3A400%2C400i%2C700%2C700i&amp;subset=latin%2Clatin-ext&amp;display=swap"',
+    'href="/assets/fonts.css"');
   html = html.replace('href="https://s1.wp.com/i/favicon.ico"', 'href="/favicon.ico"');
   html = html.replace('<link rel="apple-touch-icon" href="https://s2.wp.com/i/webclip.png" />', 'href="/assets/webclip.png"');
 

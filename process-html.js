@@ -145,7 +145,7 @@ function modifyHtml(html) {
     'href="/assets/8.css"');
   html = html.replace('href="https://fonts-api.wp.com/css?family=PT+Sans%3A400%2C400i%2C700%2C700i&amp;subset=latin%2Clatin-ext&amp;display=swap"',
     'href="/assets/fonts.css"');
-  html = html.replace('href="https://s1.wp.com/i/favicon.ico"', 'href="/favicon.ico"');
+  html = html.replaceAll('href="https://s1.wp.com/i/favicon.ico"', 'href="/favicon.ico"');
   html = html.replace('<link rel="apple-touch-icon" href="https://s2.wp.com/i/webclip.png" />', 'href="/assets/webclip.png"');
 
   return html;

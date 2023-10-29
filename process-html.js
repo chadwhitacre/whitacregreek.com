@@ -84,19 +84,21 @@ function modifyHtml(html) {
   return html;
 }
 
-async function handleFile(filepath) {
-  if (!filepath.endsWith('.html')) {
+async function handleFile(src) {
+  if (!src.endsWith('.html')) {
     return;
   }
   var html;
-  const destdir = filepath.replace('raw/', 'docs/');
-  const dom = await JSDOM.fromFile(filepath).then(dom => {
+  const dest = src.replace('raw/', 'docs/');
+  const destdir = path.dirname(dest);
+  await fs.mkdir(destdir, { recursive: true }, () => {})
+  const dom = await JSDOM.fromFile(src).then(dom => {
     modifyDom(dom);
     html = dom.serialize();
   });
   html = modifyHtml(html);
-  await fs.mkdir(path.dirname(destdir), { recursive: true }, () => {})
-  await fs.writeFile(destdir, await prettier.format(html, {parser: 'html'}), () => {});
+  html = await prettier.format(html, {parser: 'html'});
+  await fs.writeFile(dest, html, () => {});
 }
 
 async function handleDir(dirpath) {

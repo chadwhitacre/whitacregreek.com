@@ -1,10 +1,23 @@
 #!/usr/bin/env node
-const fs = require( 'fs' );
-const path = require( 'path' );
-const jsdom = require("jsdom");
-const prettier = require("prettier");
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const jsdom = require('jsdom');
+const prettier = require('prettier');
 
 const { JSDOM } = jsdom;
+function modifyImages(images) {
+  for (var i=0, img; img=images[i]; i++) {
+
+    // strip data-foo attrs
+    for (var j=0, attr; attr=img.attributes[j]; j++) {
+      if (attr.name.startsWith('data-')) {
+        img.removeAttribute(attr.name);
+        j--;
+      }
+    }
+  }
+}
 
 function modifyDom(dom) {
   const document = dom.window.document;
@@ -39,7 +52,7 @@ function modifyDom(dom) {
 
   document.getElementById('global-styles-inline-css').innerHTML = '@import url("/assets/global.css")';
 
-  return dom;
+  modifyImages(document.getElementsByTagName('img'));
 }
 
 function modifyHtml(html) {
@@ -67,18 +80,18 @@ function modifyHtml(html) {
 }
 
 async function handleFile(filepath) {
-  console.log(filepath);
   if (!filepath.endsWith('.html')) {
     return;
   }
   var html;
+  const destdir = filepath.replace('raw/', 'docs/');
   const dom = await JSDOM.fromFile(filepath).then(dom => {
-    html = modifyDom(dom).serialize();
+    modifyDom(dom);
+    html = dom.serialize();
   });
   html = modifyHtml(html);
-  const www = filepath.replace('raw/', 'docs/');
-  await fs.mkdir(path.dirname(www), { recursive: true }, () => {})
-  await fs.writeFile(www, await prettier.format(html, {parser: 'html'}), () => {});
+  await fs.mkdir(path.dirname(destdir), { recursive: true }, () => {})
+  await fs.writeFile(destdir, await prettier.format(html, {parser: 'html'}), () => {});
 }
 
 async function handleDir(dirpath) {

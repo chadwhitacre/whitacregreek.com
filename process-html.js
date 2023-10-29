@@ -127,6 +127,8 @@ function modifyHtml(html) {
   html = html.replace(/\n\n/g, '');
 
   // Hacky, yes.
+  html = html.replace('href="https://s0.wp.com/_static/??-eJylj1FqQyEQRTdUHSypST9K1+LTwU46+sTRFHdfG0KaBEIK/bzcOYc78FWUX3PD3KBwj5QFYp9xwRpnUxEOxuqtNrB04gALr/5TMS3V1QHSBqP2Ik/wP1H7wPQrouy5BxTYCyQM5JBnPc2XobAbWBVjdH7oRPkxPrvLfAXdH39cOmXYivuZ7Mbam4qVwp//v1FU1yhHeYD79YQ9a7PTRgmlwqgqHvQGAkk7X6iz6D29Gftq7cZsX+z+G4h2sMI=&amp;cssminify=yes"',
+    'href="/assets/0.css"');
   html = html.replace('href="https://s0.wp.com/_static/??-eJytkFFPAyEQhP+QsMFUqg/G38LBhm67cISFGv6914utp4mpDz5OZubL7MJ7UX7ODXOD1FXhHikLMJ1Q4IitOH9Sq9Je5AE28Ws29kVOWOPiVISzsXqvDUydOMDE8wqYqqsDpA3G/wC1A6YvEGXPPVwGCyQM5JAX+3LRRhR2A6tijM4PnSjfry/eVn8r/T5+Xbp5nhtzbypWCn++/weiukY5yp26nz9rj9o8a6OEUmFUFc96B4Gk3RLqBnpLr8a+WLsz+yd7/ABW9sKA&amp;cssminify=yes"',
     'href="/assets/1.css"');
   html = html.replace('href="https://s1.wp.com/_static/??/wp-content/mu-plugins/core-compat/wp-mediaelement.css,/wp-content/mu-plugins/wpcom-bbpress-premium-themes.css?m=1432920480j&amp;cssminify=yes"',

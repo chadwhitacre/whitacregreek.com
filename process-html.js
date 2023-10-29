@@ -27,13 +27,16 @@ async function download(url, destdir) {
   }
 
   filepath = path.join(destdir, filename);
-  var file = fs.createWriteStream(filepath);
-  await https.get(url, function(response) {
-    response.pipe(file);
-    file.on('finish', function() {
-      file.close();
+  if (!fs.existsSync(filepath)) {
+    var file = fs.createWriteStream(filepath);
+    console.log('downloading', url);
+    await https.get(url, function(response) {
+      response.pipe(file);
+      file.on('finish', function() {
+        file.close();
+      });
     });
-  });
+  }
 
   return filename;
 }
@@ -139,6 +142,8 @@ function modifyHtml(html) {
     'href="/assets/7.css"');
   html = html.replace('href="https://s0.wp.com/_static/??-eJyljEsKgDAMBS9kDUUquhDPom0Qaz/BNHh9KdgTuBl4w2PgIWVzKpgKRFEU5DgTg8dCm72+DTHnCicBGex2Z2EMwM9JeKtdkgvYW+YOftTaqYkaXOOix8noQU+z8S9MR0BZ&amp;cssminify=yes"',
     'href="/assets/8.css"');
+  html = html.replace('https://fonts-api.wp.com/css?family=PT+Sans%3A400%2C400i%2C700%2C700i&subset=latin%2Clatin-ext&display=swap',
+    'href="/assets/9.css"');
   html = html.replace('href="https://s1.wp.com/i/favicon.ico"', 'href="/favicon.ico"');
   html = html.replace('<link rel="apple-touch-icon" href="https://s2.wp.com/i/webclip.png" />', 'href="/assets/webclip.png"');
 

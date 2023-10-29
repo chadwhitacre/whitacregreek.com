@@ -50,6 +50,11 @@ function modifyDom(dom) {
   remove('meta[name="msapplication-window"]');
   remove('meta[name="msapplication-tooltip"]');
 
+  // carousel
+  remove('#jp-carousel-loading-overlay');
+  remove('.jp-carousel-overlay');
+  remove('#all-css-0-2');
+
   document.getElementById('global-styles-inline-css').innerHTML = '@import url("/assets/global.css")';
 
   modifyImages(document.getElementsByTagName('img'));

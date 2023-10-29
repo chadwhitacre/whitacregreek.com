@@ -6,7 +6,39 @@ const jsdom = require('jsdom');
 const prettier = require('prettier');
 
 const { JSDOM } = jsdom;
-function modifyImages(images) {
+
+function reverse(s) {
+  return s.split('').reverse().join('');
+}
+
+async function download(url, destdir) {
+  var fnqs = path.basename(url);
+  var filename = fnqs, querystring = '';
+
+  if (fnqs.indexOf('?') > -1) {
+    [filename, querystring] = fnqs.split('?');
+    var emanelif = reverse(filename);
+    var idx = emanelif.indexOf('.');
+    var ext = reverse(emanelif.slice(0, idx));
+    var fn = reverse(emanelif.slice(idx+1));
+    part = querystring.replace('=', '-');
+    filename = `${fn}-${part}.${ext}`
+  }
+
+  filepath = path.join(destdir, filename);
+  var file = fs.createWriteStream(filepath);
+  console.log(url);
+  await https.get(url, function(response) {
+    response.pipe(file);
+    file.on('finish', function() {
+      file.close();
+    });
+  });
+
+  return filepath.replace('docs/', '/');
+}
+
+async function modifyImages(images, destdir) {
   for (var i=0, img; img=images[i]; i++) {
 
     // strip data-foo attrs
@@ -16,10 +48,20 @@ function modifyImages(images) {
         j--;
       }
     }
+
+    // download img.src and replace
+    var url = img.src;
+    if (url.startsWith('http')) {
+      img.src = await download(url, destdir);
+    }
+
+    // same for srcset
+    //console.log(img.srcset);
+
   }
 }
 
-function modifyDom(dom) {
+async function modifyDom(dom, destdir) {
   const document = dom.window.document;
 
   function remove(query) {
@@ -57,12 +99,14 @@ function modifyDom(dom) {
 
   document.getElementById('global-styles-inline-css').innerHTML = '@import url("/assets/global.css")';
 
-  modifyImages(document.getElementsByTagName('img'));
+  await modifyImages(document.getElementsByTagName('img'), destdir);
 }
 
 function modifyHtml(html) {
   html = html.replace(/<!--[\s\S]*?-->/g, '');
   html = html.replace(/\n\n/g, '');
+
+  // Hacky, yes.
   html = html.replace('href="https://s0.wp.com/_static/??-eJytkFFPAyEQhP+QsMFUqg/G38LBhm67cISFGv6914utp4mpDz5OZubL7MJ7UX7ODXOD1FXhHikLMJ1Q4IitOH9Sq9Je5AE28Ws29kVOWOPiVISzsXqvDUydOMDE8wqYqqsDpA3G/wC1A6YvEGXPPVwGCyQM5JAX+3LRRhR2A6tijM4PnSjfry/eVn8r/T5+Xbp5nhtzbypWCn++/weiukY5yp26nz9rj9o8a6OEUmFUFc96B4Gk3RLqBnpLr8a+WLsz+yd7/ABW9sKA&amp;cssminify=yes"',
     'href="/assets/1.css"');
   html = html.replace('href="https://s1.wp.com/_static/??/wp-content/mu-plugins/core-compat/wp-mediaelement.css,/wp-content/mu-plugins/wpcom-bbpress-premium-themes.css?m=1432920480j&amp;cssminify=yes"',
@@ -81,6 +125,7 @@ function modifyHtml(html) {
     'href="/assets/8.css"');
   html = html.replace('href="https://s1.wp.com/i/favicon.ico"', 'href="/favicon.ico"');
   html = html.replace('<link rel="apple-touch-icon" href="https://s2.wp.com/i/webclip.png" />', 'href="/assets/webclip.png"');
+
   return html;
 }
 
@@ -88,16 +133,18 @@ async function handleFile(src) {
   if (!src.endsWith('.html')) {
     return;
   }
-  var html;
   const dest = src.replace('raw/', 'docs/');
   const destdir = path.dirname(dest);
   await fs.mkdir(destdir, { recursive: true }, () => {})
-  const dom = await JSDOM.fromFile(src).then(dom => {
-    modifyDom(dom);
-    html = dom.serialize();
-  });
+
+  const dom = await JSDOM.fromFile(src);
+  await modifyDom(dom, destdir);
+
+  var html;
+  html = dom.serialize();
   html = modifyHtml(html);
   html = await prettier.format(html, {parser: 'html'});
+
   await fs.writeFile(dest, html, () => {});
 }
 

@@ -35,7 +35,7 @@ async function download(url, destdir) {
     });
   });
 
-  return filepath.replace('docs/', '/');
+  return filename;
 }
 
 async function modifyImages(images, destdir) {
@@ -63,6 +63,16 @@ async function modifyImages(images, destdir) {
       urlSizes[j] = `${url} ${size}`;
     }
     img.srcset = urlSizes.join(', ');
+  }
+}
+
+async function modifyAnchors(anchors, destdir) {
+  for (var i=0, a; a=anchors[i]; i++) {
+
+    var url = a.href;
+    if (url.startsWith('https://whitacregreek.files.wordpress.com/')) {
+      a.href = await download(url, destdir);
+    }
   }
 }
 
@@ -105,6 +115,7 @@ async function modifyDom(dom, destdir) {
   document.getElementById('global-styles-inline-css').innerHTML = '@import url("/assets/global.css")';
 
   await modifyImages(document.getElementsByTagName('img'), destdir);
+  await modifyAnchors(document.getElementsByTagName('a'), destdir);
 }
 
 function modifyHtml(html) {

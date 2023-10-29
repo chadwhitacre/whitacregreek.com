@@ -76,7 +76,7 @@ async function handleFile(filepath) {
     html = modifyDom(dom).serialize();
   });
   html = modifyHtml(html);
-  const www = filepath.replace('raw/', 'www/');
+  const www = filepath.replace('raw/', 'docs/');
   await fs.mkdir(path.dirname(www), { recursive: true }, () => {})
   await fs.writeFile(www, await prettier.format(html, {parser: 'html'}), () => {});
 }

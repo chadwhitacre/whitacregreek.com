@@ -142,6 +142,7 @@ async function modifyDom(dom, destdir) {
   remove('link[rel="shortlink"]');
   remove('link[rel="search"]');
   remove('link[rel="dns-prefetch"]');
+  remove('link[rel="profile"]');
   remove('link[href="https://fonts.gstatic.com"]');
   remove('meta[name="generator"]');
   remove('meta[property="article:publisher"]');

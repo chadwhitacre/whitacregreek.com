@@ -1,3 +1,19 @@
+
+.singing-home {
+  text-align: center;
+  margin: 16px 0 -16px;
+  padding: 12px;
+  font-weight: bold;
+  font-size: 12pt;
+  line-height: 16pt;
+  background: #ffffb3;
+}
+@media only screen and (min-width: 560px) {
+	.singing-home {
+	  margin: 32px 0 -32px;
+	}
+}
+
 body {
   --wp--preset--color--black: #000000;
   --wp--preset--color--cyan-bluish-gray: #abb8c3;

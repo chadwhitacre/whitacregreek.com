@@ -9005,7 +9005,7 @@ figcaption.coblocks-gallery--primary-caption:not(.has-caption-color) {
   background-repeat: no-repeat;
   cursor: pointer;
   height: 26px;
-  -webkit-mask-image: url(/asset/close.svg);
+  -webkit-mask-image: url(/assets/close.svg);
   mask-image: url(/assets/close.svg);
   -webkit-mask-size: contain;
   mask-size: contain;

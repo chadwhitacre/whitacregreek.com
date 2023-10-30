@@ -80,6 +80,15 @@ async function modifyAnchors(anchors, destdir) {
       url = url.slice(base.length)
     }
 
+
+    // Fix some dead links.
+    if (url === 'https://www.eerdmans.com/Products/7927/a-grammar-of-new-testament-greek.aspx') {
+      a.href = 'https://www.eerdmans.com/9780802879271/a-grammar-of-new-testament-greek/';
+    }
+    if (url === 'http://www.bakerpublishinggroup.com/books/using-and-enjoying-biblical-greek/352020') {
+      a.href = 'http://www.bakerpublishinggroup.com/books/using-and-enjoying-biblical-greek/352021';
+    }
+
     if (url.startsWith('https://whitacregreek.com')) {
       a.href = url.slice('https://whitacregreek.com'.length);
     } else if (url.startsWith('https://whitacregreek.files.wordpress.com/')) {

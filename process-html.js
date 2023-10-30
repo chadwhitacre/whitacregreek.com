@@ -78,14 +78,41 @@ async function modifyAnchors(anchors, destdir) {
       url = url.slice(base.length)
     }
 
-    if (url.startsWith('https://whitacregreek.files.wordpress.com/')) {
-      a.href = await download(url, destdir);
-    } else if (url.startsWith('https://whitacregreek.com')) {
+    if (url.startsWith('https://whitacregreek.com')) {
       a.href = url.slice('https://whitacregreek.com'.length);
+    } else if (url.startsWith('https://whitacregreek.files.wordpress.com/')) {
+
+      // Fix up a couple dead links from upstream.
+      if (url.endsWith('sneeze-sheet-nov2022.pdf')) {
+        url = 'https://whitacregreek.files.wordpress.com/2023/04/sneeze-sheet-april-2023.pdf';
+      } else if (url.endsWith('hallowing-the-name-the-jesus-prayer-2023-april11.pdf')) {
+        a.href = '/1139-2/'; // correct link exists on this page
+        continue;
+      }
+
+      a.href = await download(url, destdir);
     }
 
     if (url.startsWith('/') && url.endsWith('index.html')) {
       a.href = url.slice(0, -'index.html'.length);
+    } else if (url.endsWith('#content')) {
+      a.href = '#content';
+    }
+  }
+}
+
+async function modifyMetaTags(tags, destdir) {
+  for (var i=0, tag; tag=tags[i]; i++) {
+    if (tag.content.startsWith('https://whitacregreek.files.wordpress.com/')) {
+      tag.content = await download(tag.content, destdir);
+    }
+  }
+}
+
+async function modifyObjects(objects, destdir) {
+  for (var i=0, obj; obj=objects[i]; i++) {
+    if (obj.data.startsWith('https://whitacregreek.files.wordpress.com/')) {
+      obj.data = await download(obj.data, destdir);
     }
   }
 }
@@ -131,6 +158,8 @@ async function modifyDom(dom, destdir) {
 
   await modifyImages(document.getElementsByTagName('img'), destdir);
   await modifyAnchors(document.getElementsByTagName('a'), destdir);
+  await modifyMetaTags(document.getElementsByTagName('meta'), destdir);
+  await modifyObjects(document.getElementsByTagName('object'), destdir);
 }
 
 function modifyHtml(html) {
@@ -159,7 +188,8 @@ function modifyHtml(html) {
   html = html.replace('href="https://fonts-api.wp.com/css?family=PT+Sans%3A400%2C400i%2C700%2C700i&amp;subset=latin%2Clatin-ext&amp;display=swap"',
     'href="/assets/fonts.css"');
   html = html.replaceAll('href="https://s1.wp.com/i/favicon.ico"', 'href="/favicon.ico"');
-  html = html.replace('<link rel="apple-touch-icon" href="https://s2.wp.com/i/webclip.png" />', 'href="/assets/webclip.png"');
+  html = html.replace('href="https://s2.wp.com/i/webclip.png"', 'href="/assets/webclip.png"');
+  html = html.replace('content="https://s0.wp.com/i/blank.jpg"', 'href="/assets/blank.jpg"');
 
   return html;
 }

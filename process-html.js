@@ -71,10 +71,21 @@ async function modifyImages(images, destdir) {
 
 async function modifyAnchors(anchors, destdir) {
   for (var i=0, a; a=anchors[i]; i++) {
+    const base = `file://${process.cwd()}/raw`
 
     var url = a.href;
+    if (url.startsWith(base)) {
+      url = url.slice(base.length)
+    }
+
     if (url.startsWith('https://whitacregreek.files.wordpress.com/')) {
       a.href = await download(url, destdir);
+    } else if (url.startsWith('https://whitacregreek.com')) {
+      a.href = url.slice('https://whitacregreek.com'.length);
+    }
+
+    if (url.startsWith('/') && url.endsWith('index.html')) {
+      a.href = url.slice(0, -'index.html'.length);
     }
   }
 }

@@ -88,6 +88,9 @@ async function modifyAnchors(anchors, destdir) {
     if (url === 'http://www.bakerpublishinggroup.com/books/using-and-enjoying-biblical-greek/352020') {
       a.href = 'http://www.bakerpublishinggroup.com/books/using-and-enjoying-biblical-greek/352021';
     }
+    if (a.innerHTML === 'Barnes and Nobel') {
+      a.innerHTML = 'Barnes &amp; Noble';
+    }
 
     if (url.startsWith('https://whitacregreek.com')) {
       a.href = url.slice('https://whitacregreek.com'.length);

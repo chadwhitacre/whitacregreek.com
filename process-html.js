@@ -73,6 +73,8 @@ async function modifyAnchors(anchors, destdir) {
   for (var i=0, a; a=anchors[i]; i++) {
     const base = `file://${process.cwd()}/raw`
 
+    a.removeAttribute('target');
+
     var url = a.href;
     if (url.startsWith(base)) {
       url = url.slice(base.length)
